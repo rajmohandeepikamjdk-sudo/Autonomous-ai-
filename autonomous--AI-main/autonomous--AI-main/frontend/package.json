@@ -1,0 +1,8 @@
+{
+  "name": "autonomous-content-agent-frontend",
+  "version": "1.0.0",
+  "description": "Static frontend for the Autonomous AI Content Agent. No build step, no dependencies.",
+  "scripts": {
+    "start": "node server.js"
+  }
+}

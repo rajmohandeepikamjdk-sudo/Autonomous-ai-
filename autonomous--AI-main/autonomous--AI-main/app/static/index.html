@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Autonomous AI Content Agent — Signal Feed</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap');
+
+  :root{
+    --bg: #0a0d12;
+    --bg-raised: #10141b;
+    --panel: #131820;
+    --line: #232a35;
+    --ink: #eceef1;
+    --ink-dim: #838d9a;
+    --ink-faint: #4c5563;
+    --amber: #e8a33d;
+    --amber-dim: #7a5a25;
+    --teal: #3ee8cf;
+    --teal-dim: #1d5c53;
+    --red: #e2645a;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --sans: 'Inter', -apple-system, sans-serif;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:
+      radial-gradient(ellipse 900px 500px at 15% -10%, rgba(232,163,61,0.08), transparent),
+      radial-gradient(ellipse 700px 500px at 90% 10%, rgba(62,232,207,0.06), transparent),
+      var(--bg);
+    color:var(--ink);
+    font-family:var(--sans);
+    line-height:1.5;
+    min-height:100vh;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.001ms !important; transition-duration:0.001ms !important;}
+  }
+
+  a{color:inherit;}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px;}
+
+  /* ---------- NAV ---------- */
+  nav{
+    position:sticky;top:0;z-index:50;
+    background:rgba(10,13,18,0.85);backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  nav .wrap{display:flex;align-items:center;justify-content:space-between;height:60px;}
+  .brand{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-weight:600;font-size:14px;letter-spacing:0.02em;}
+  .brand .dot{width:8px;height:8px;border-radius:50%;background:var(--teal);box-shadow:0 0 8px var(--teal);}
+  .brand .dot.off{background:var(--ink-faint);box-shadow:none;}
+  .navlinks{display:flex;gap:28px;font-size:13px;color:var(--ink-dim);}
+  .navlinks a{text-decoration:none;transition:color .15s;}
+  .navlinks a:hover{color:var(--ink);}
+
+  /* ---------- HERO ---------- */
+  header.hero{padding:76px 0 40px;}
+  .eyebrow{
+    font-family:var(--mono);font-size:12px;color:var(--amber);
+    letter-spacing:0.12em;text-transform:uppercase;
+    display:flex;align-items:center;gap:10px;margin-bottom:22px;
+  }
+  .eyebrow::before{content:'';width:22px;height:1px;background:var(--amber-dim);}
+  h1{
+    font-family:var(--sans);font-weight:800;
+    font-size:clamp(32px,5vw,54px);
+    line-height:1.05;letter-spacing:-0.02em;
+    max-width:820px;
+  }
+  h1 .accent{color:var(--amber);}
+  .lede{
+    margin-top:20px;max-width:600px;color:var(--ink-dim);
+    font-size:16px;line-height:1.65;
+  }
+  .lede code{font-family:var(--mono);color:var(--teal);background:rgba(62,232,207,0.08);padding:1px 6px;border-radius:4px;font-size:0.9em;}
+
+  .hero-actions{display:flex;gap:12px;margin-top:32px;flex-wrap:wrap;align-items:center;}
+  .btn{
+    font-family:var(--sans);font-weight:600;font-size:14px;
+    padding:13px 22px;border-radius:8px;border:1px solid transparent;
+    cursor:pointer;transition:transform .12s, box-shadow .12s, background .15s;
+    display:inline-flex;align-items:center;gap:8px;
+  }
+  .btn:active{transform:scale(0.98);}
+  .btn-primary{background:var(--amber);color:#1a1206;}
+  .btn-primary:hover{box-shadow:0 0 0 3px rgba(232,163,61,0.18);}
+  .btn-primary:disabled{background:var(--ink-faint);color:var(--bg);cursor:default;box-shadow:none;}
+  .btn-ghost{background:transparent;border-color:var(--line);color:var(--ink-dim);}
+  .btn-ghost:hover{border-color:var(--ink-faint);color:var(--ink);}
+
+  .apibox{
+    display:flex;align-items:center;gap:8px;margin-top:18px;
+    font-family:var(--mono);font-size:12.5px;color:var(--ink-faint);
+  }
+  .apibox input{
+    background:var(--bg-raised);border:1px solid var(--line);color:var(--ink-dim);
+    font-family:var(--mono);font-size:12.5px;padding:8px 10px;border-radius:6px;
+    width:260px;outline:none;transition:border-color .15s;
+  }
+  .apibox input:focus{border-color:var(--teal-dim);color:var(--ink);}
+  .apibox button{
+    background:none;border:1px solid var(--line);color:var(--ink-faint);
+    font-family:var(--mono);font-size:11.5px;padding:8px 10px;border-radius:6px;cursor:pointer;
+  }
+  .apibox button:hover{border-color:var(--ink-faint);color:var(--ink-dim);}
+
+  /* ---------- PIPELINE (signature element) ---------- */
+  .pipeline-section{padding:20px 0 64px;}
+  .pipeline-label{
+    font-family:var(--mono);font-size:11.5px;color:var(--ink-faint);
+    letter-spacing:0.08em;text-transform:uppercase;margin-bottom:18px;
+  }
+  .pipeline{
+    position:relative;
+    display:flex;align-items:stretch;gap:0;
+    background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    padding:26px 20px;overflow-x:auto;
+  }
+  .pnode{
+    flex:1 0 auto;min-width:118px;
+    display:flex;flex-direction:column;align-items:center;text-align:center;
+    padding:0 6px;position:relative;
+  }
+  .pnode .idx{
+    font-family:var(--mono);font-size:10px;color:var(--ink-faint);margin-bottom:8px;
+  }
+  .pnode .ring{
+    width:38px;height:38px;border-radius:50%;
+    border:1.5px solid var(--line);
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--mono);font-size:14px;color:var(--ink-faint);
+    background:var(--bg-raised);
+    transition:border-color .3s, color .3s, box-shadow .3s;
+    margin-bottom:10px;
+  }
+  .pnode .name{font-size:11.5px;color:var(--ink-dim);font-weight:600;max-width:110px;}
+  .pnode .verdict{font-family:var(--mono);font-size:9.5px;color:var(--ink-faint);margin-top:4px;height:12px;}
+  .pconnector{
+    flex:0 0 28px;align-self:center;height:1.5px;background:var(--line);
+    position:relative;top:-24px;
+  }
+  .pnode.active .ring{border-color:var(--teal);color:var(--teal);box-shadow:0 0 14px rgba(62,232,207,0.35);}
+  .pnode.active .name{color:var(--ink);}
+  .pnode.done .ring{border-color:var(--amber-dim);color:var(--amber);}
+  .pnode.done .verdict{color:var(--teal);}
+
+  /* ---------- STATUS ---------- */
+  .status-grid{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:1px;
+    background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden;
+    margin-top:0;
+  }
+  .stat{background:var(--panel);padding:20px 18px;}
+  .stat .k{font-family:var(--mono);font-size:10.5px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.06em;}
+  .stat .v{font-family:var(--mono);font-size:22px;font-weight:600;color:var(--ink);margin-top:8px;}
+  .stat .v.small{font-size:14px;font-weight:500;color:var(--ink-dim);}
+  @media (max-width:640px){.status-grid{grid-template-columns:repeat(2,1fr);}}
+
+  /* ---------- SECTIONS ---------- */
+  section{padding:56px 0;border-top:1px solid var(--line);}
+  .section-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:28px;gap:16px;flex-wrap:wrap;}
+  .section-head h2{font-size:22px;font-weight:800;letter-spacing:-0.01em;}
+  .section-head .sub{font-family:var(--mono);font-size:12px;color:var(--ink-faint);}
+
+  /* how it works */
+  .steps{display:flex;flex-direction:column;}
+  .step{
+    display:grid;grid-template-columns:56px 1fr;gap:18px;
+    padding:18px 0;border-bottom:1px solid var(--line);
+  }
+  .step:last-child{border-bottom:none;}
+  .step .num{font-family:var(--mono);color:var(--amber);font-size:14px;font-weight:600;padding-top:2px;}
+  .step h3{font-size:15px;font-weight:700;margin-bottom:4px;}
+  .step p{font-size:14px;color:var(--ink-dim);max-width:640px;}
+
+  /* feed */
+  .feed-list{display:flex;flex-direction:column;gap:14px;}
+  .post{
+    background:var(--panel);border:1px solid var(--line);border-radius:10px;
+    padding:20px 22px;transition:border-color .15s;
+  }
+  .post:hover{border-color:var(--ink-faint);}
+  .post-meta{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:11px;color:var(--ink-faint);margin-bottom:10px;flex-wrap:wrap;}
+  .post-meta .pill{border:1px solid var(--teal-dim);color:var(--teal);padding:2px 8px;border-radius:20px;font-size:10px;}
+  .post h3{font-size:16.5px;font-weight:700;margin-bottom:6px;}
+  .post p.body{font-size:14px;color:var(--ink-dim);margin-bottom:10px;}
+  .post .rationale{font-size:12.5px;color:var(--ink-faint);font-style:italic;border-left:2px solid var(--line);padding-left:10px;margin-bottom:10px;}
+  .post .sources{display:flex;gap:8px;flex-wrap:wrap;font-family:var(--mono);font-size:10.5px;}
+  .post .sources span{color:var(--ink-faint);border:1px solid var(--line);padding:2px 8px;border-radius:5px;}
+
+  .empty{
+    text-align:center;padding:48px 20px;color:var(--ink-faint);
+    font-family:var(--mono);font-size:13px;border:1px dashed var(--line);border-radius:10px;
+  }
+  .skeleton{background:linear-gradient(90deg,var(--panel),var(--bg-raised),var(--panel));background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:10px;height:88px;border:1px solid var(--line);}
+  @keyframes shimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+
+  /* logs */
+  .logbox{
+    background:#070a0d;border:1px solid var(--line);border-radius:10px;
+    padding:16px 18px;font-family:var(--mono);font-size:12px;
+    max-height:280px;overflow-y:auto;color:var(--ink-dim);
+  }
+  .logline{padding:3px 0;white-space:pre-wrap;word-break:break-word;}
+  .logline .lvl-INFO{color:var(--teal);}
+  .logline .lvl-WARNING{color:var(--amber);}
+  .logline .lvl-ERROR{color:var(--red);}
+  .logline .ts{color:var(--ink-faint);}
+
+  footer{padding:40px 0 60px;border-top:1px solid var(--line);}
+  footer p{font-family:var(--mono);font-size:11.5px;color:var(--ink-faint);}
+
+  ::-webkit-scrollbar{height:8px;width:8px;}
+  ::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px;}
+
+  :focus-visible{outline:2px solid var(--teal);outline-offset:2px;}
+
+  .toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:var(--panel);border:1px solid var(--line);color:var(--ink);
+    padding:12px 20px;border-radius:8px;font-size:13px;font-family:var(--mono);
+    opacity:0;transition:opacity .25s, transform .25s;pointer-events:none;z-index:100;
+    box-shadow:0 8px 30px rgba(0,0,0,0.4);
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="brand"><span class="dot off" id="navDot"></span>AGENT.FEED</div>
+    <div class="navlinks">
+      <a href="#pipeline">Pipeline</a>
+      <a href="#how">How it works</a>
+      <a href="#feed">Feed</a>
+      <a href="#logs">Logs</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero wrap">
+  <div class="eyebrow">Autonomous multi-agent content system</div>
+  <h1>One call boots it. <span class="accent">Seven agents</span> keep it running.</h1>
+  <p class="lede">
+    Call <code>POST /api/agent/init</code> once — a scheduler wakes up and, without
+    another prompt from you, keeps discovering topics, researching them, writing,
+    fact-checking, and publishing to a live feed on its own clock.
+  </p>
+  <div class="hero-actions">
+    <button class="btn btn-primary" id="initBtn">▶ Initialize agent</button>
+    <a href="#feed" class="btn btn-ghost">View feed</a>
+  </div>
+  <div class="apibox">
+    <span>API&nbsp;base</span>
+    <input id="apiBase" type="text" value="" placeholder="same origin (leave blank)" spellcheck="false">
+    <button id="apiSave">connect</button>
+  </div>
+</header>
+
+<section class="pipeline-section wrap" id="pipeline">
+  <div class="pipeline-label">// live pipeline — one cycle, seven stages</div>
+  <div class="pipeline" id="pipelineViz"></div>
+
+  <div class="status-grid" id="statusGrid" style="margin-top:20px;">
+    <div class="stat"><div class="k">Scheduler</div><div class="v" id="stScheduler">—</div></div>
+    <div class="stat"><div class="k">Cycles completed</div><div class="v" id="stCycles">—</div></div>
+    <div class="stat"><div class="k">Total posts</div><div class="v" id="stPosts">—</div></div>
+    <div class="stat"><div class="k">Next run</div><div class="v small" id="stNext">—</div></div>
+  </div>
+</section>
+
+<section id="how">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>How a cycle runs</h2>
+      <div class="sub">app/agents/orchestrator.py</div>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="num">01</div><div><h3>Topic discovery</h3><p>Scores seed topics plus memory-derived ones; picks one not covered recently, checked against ChromaDB for similarity.</p></div></div>
+      <div class="step"><div class="num">02</div><div><h3>Source validation</h3><p>Filters candidate sources against a domain allow/deny list and a reachability check before anything gets cited.</p></div></div>
+      <div class="step"><div class="num">03</div><div><h3>Web research</h3><p>Gathers structured findings per validated source. Zero usable sources aborts the cycle rather than inventing content.</p></div></div>
+      <div class="step"><div class="num">04</div><div><h3>Content writing</h3><p>Drafts a title, body, and rationale from the research notes — the "why this angle" is kept as a first-class field.</p></div></div>
+      <div class="step"><div class="num">05</div><div><h3>Quality review</h3><p>Self-critiques the draft and can send it back for a bounded number of revisions before giving up on the cycle.</p></div></div>
+      <div class="step"><div class="num">06</div><div><h3>Fact-checking</h3><p>Cross-checks every claim in the draft against the research notes and flags anything unsupported.</p></div></div>
+      <div class="step"><div class="num">07</div><div><h3>Publishing</h3><p>Hashes the post to reject duplicates, persists it to SQLite, and embeds it into memory so future cycles don't repeat it.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<section id="feed">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Published feed</h2>
+      <div class="sub" id="feedSub">GET /api/agent/feed</div>
+    </div>
+    <div class="feed-list" id="feedList">
+      <div class="empty">Connect to an API base and initialize the agent to see published posts here.</div>
+    </div>
+  </div>
+</section>
+
+<section id="logs">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Agent log</h2>
+      <div class="sub">GET /api/agent/logs</div>
+    </div>
+    <div class="logbox" id="logBox">
+      <div class="logline">waiting for connection…</div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>AUTONOMOUS-CONTENT-AGENT · FastAPI + SQLite + ChromaDB + APScheduler · this page talks directly to your running instance, nothing is sent anywhere else.</p>
+  </div>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  const AGENTS = [
+    {key:'topic', name:'Topic Discovery'},
+    {key:'source', name:'Source Validation'},
+    {key:'research', name:'Web Research'},
+    {key:'writer', name:'Content Writer'},
+    {key:'review', name:'Quality Review'},
+    {key:'fact', name:'Fact Checker'},
+    {key:'publish', name:'Publisher'},
+  ];
+
+  let apiBase = document.getElementById('apiBase').value.replace(/\/$/,''); // '' = same origin as this page
+  let pollTimer = null;
+  let pipelineTimer = null;
+
+  const $ = (id) => document.getElementById(id);
+
+  function toast(msg, isError){
+    const t = $('toast');
+    t.textContent = msg;
+    t.style.borderColor = isError ? 'var(--red)' : 'var(--line)';
+    t.classList.add('show');
+    clearTimeout(t._hideT);
+    t._hideT = setTimeout(()=>t.classList.remove('show'), 3200);
+  }
+
+  function buildPipeline(){
+    const viz = $('pipelineViz');
+    viz.innerHTML = '';
+    AGENTS.forEach((a, i) => {
+      const node = document.createElement('div');
+      node.className = 'pnode';
+      node.id = 'pnode-' + a.key;
+      node.innerHTML = `
+        <div class="idx">STAGE ${String(i+1).padStart(2,'0')}</div>
+        <div class="ring">${i+1}</div>
+        <div class="name">${a.name}</div>
+        <div class="verdict"></div>
+      `;
+      viz.appendChild(node);
+      if (i < AGENTS.length - 1){
+        const conn = document.createElement('div');
+        conn.className = 'pconnector';
+        viz.appendChild(conn);
+      }
+    });
+  }
+
+  function animatePipelineOnce(){
+    AGENTS.forEach((a, i) => {
+      setTimeout(() => {
+        document.querySelectorAll('.pnode').forEach(n => n.classList.remove('active'));
+        const node = $('pnode-' + a.key);
+        if (node){
+          node.classList.add('active');
+          setTimeout(() => { node.classList.remove('active'); node.classList.add('done'); }, 500);
+        }
+      }, i * 420);
+    });
+  }
+
+  function startPipelineLoop(){
+    stopPipelineLoop();
+    animatePipelineOnce();
+    pipelineTimer = setInterval(animatePipelineOnce, AGENTS.length * 420 + 1800);
+  }
+  function stopPipelineLoop(){
+    if (pipelineTimer) clearInterval(pipelineTimer);
+    document.querySelectorAll('.pnode').forEach(n => n.classList.remove('active','done'));
+  }
+
+  async function apiGet(path){
+    const res = await fetch(apiBase + path);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return res.json();
+  }
+  async function apiPost(path){
+    const res = await fetch(apiBase + path, { method: 'POST' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return res.json();
+  }
+
+  function fmtTime(iso){
+    if (!iso) return '—';
+    try { return new Date(iso).toLocaleString(undefined, {hour:'2-digit',minute:'2-digit',month:'short',day:'numeric'}); }
+    catch(e){ return iso; }
+  }
+
+  function renderStatus(s){
+    $('stScheduler').textContent = s.scheduler_running ? 'RUNNING' : (s.initialized ? 'IDLE' : 'NOT INIT');
+    $('stScheduler').style.color = s.scheduler_running ? 'var(--teal)' : (s.initialized ? 'var(--amber)' : 'var(--ink-faint)');
+    $('stCycles').textContent = s.cycles_completed ?? 0;
+    $('stPosts').textContent = s.total_posts ?? 0;
+    $('stNext').textContent = fmtTime(s.next_run_at);
+    $('navDot').classList.toggle('off', !s.scheduler_running);
+
+    if (s.scheduler_running && !pipelineTimer) startPipelineLoop();
+    if (!s.scheduler_running && pipelineTimer) stopPipelineLoop();
+  }
+
+  function renderFeed(posts){
+    const list = $('feedList');
+    $('feedSub').textContent = `GET /api/agent/feed · ${posts.length} post${posts.length===1?'':'s'}`;
+    if (!posts.length){
+      list.innerHTML = '<div class="empty">No posts published yet — the first cycle may still be running. This refreshes automatically.</div>';
+      return;
+    }
+    list.innerHTML = posts.map(p => `
+      <article class="post">
+        <div class="post-meta">
+          <span class="pill">PUBLISHED</span>
+          <span>${fmtTime(p.createdAt)}</span>
+        </div>
+        <h3>${escapeHtml(p.title)}</h3>
+        <p class="body">${escapeHtml(truncate(p.text, 320))}</p>
+        ${p.rationale ? `<div class="rationale">${escapeHtml(p.rationale)}</div>` : ''}
+        ${p.sources && p.sources.length ? `<div class="sources">${p.sources.map(s=>`<span>${escapeHtml(s)}</span>`).join('')}</div>` : ''}
+      </article>
+    `).join('');
+  }
+
+  function renderLogs(logs){
+    const box = $('logBox');
+    if (!logs.length){
+      box.innerHTML = '<div class="logline">no log entries yet.</div>';
+      return;
+    }
+    box.innerHTML = logs.slice(0, 40).map(l => `
+      <div class="logline"><span class="ts">${fmtTime(l.createdAt)}</span> <span class="lvl-${l.level}">[${l.level}]</span> ${escapeHtml(l.agent)} — ${escapeHtml(l.message)}</div>
+    `).join('');
+  }
+
+  function truncate(str, n){ return str && str.length > n ? str.slice(0, n).trim() + '…' : (str || ''); }
+  function escapeHtml(str){
+    return (str || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  async function refreshAll(){
+    try {
+      const [status, feed, logs] = await Promise.all([
+        apiGet('/api/agent/status'),
+        apiGet('/api/agent/feed?limit=30'),
+        apiGet('/api/agent/logs?limit=40'),
+      ]);
+      renderStatus(status);
+      renderFeed(feed.posts || []);
+      renderLogs(logs.logs || []);
+      $('initBtn').textContent = status.scheduler_running ? '● Agent running' : '▶ Initialize agent';
+      $('initBtn').disabled = !!status.scheduler_running;
+    } catch (err) {
+      $('navDot').classList.add('off');
+      $('feedList').innerHTML = `<div class="empty">Can't reach ${apiBase} — make sure the server is running (docker compose up) and the API base above is correct, then hit "connect".</div>`;
+      $('logBox').innerHTML = `<div class="logline"><span class="lvl-ERROR">[ERROR]</span> ${escapeHtml(err.message)}</div>`;
+    }
+  }
+
+  function startPolling(){
+    if (pollTimer) clearInterval(pollTimer);
+    refreshAll();
+    pollTimer = setInterval(refreshAll, 5000);
+  }
+
+  $('initBtn').addEventListener('click', async () => {
+    $('initBtn').disabled = true;
+    $('initBtn').textContent = 'Initializing…';
+    try {
+      const r = await apiPost('/api/agent/init');
+      toast(r.message || 'Agent initialized');
+      startPipelineLoop();
+      refreshAll();
+    } catch (err) {
+      toast('Init failed: ' + err.message, true);
+      $('initBtn').disabled = false;
+      $('initBtn').textContent = '▶ Initialize agent';
+    }
+  });
+
+  $('apiSave').addEventListener('click', () => {
+    apiBase = $('apiBase').value.replace(/\/$/, '');
+    toast('Connected to ' + apiBase);
+    startPolling();
+  });
+  $('apiBase').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') $('apiSave').click();
+  });
+
+  buildPipeline();
+  startPolling();
+})();
+</script>
+
+</body>
+</html>
